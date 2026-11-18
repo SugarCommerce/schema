@@ -1,0 +1,243 @@
+{
+  "name": "acme/fixture",
+  "extra": {
+    "schema": {
+      "namespace": "Acme\\Database",
+      "prefix": "acme",
+      "default_number": "ACME_DEFAULT_QUERY_NUMBER",
+      "kern": "Acme\\Vendor\\BerlinDB\\Database\\Kern",
+      "bases": {
+        "query": "Acme\\Database\\Query"
+      },
+      "components": {
+        "summary": "The components Acme ships with."
+      },
+      "header": {
+        "copyright": "Copyright (c) 2026, ArrayPress Limited"
+      },
+      "initial_version": "202611150",
+      "command": "bin/generate-components.py",
+      "kinds": {
+        "id": "acme_sanitize_id",
+        "count": "acme_sanitize_count",
+        "amount": "acme_sanitize_amount",
+        "flag": "acme_sanitize_flag",
+        "rate": "acme_sanitize_rate",
+        "currency": "acme_sanitize_currency_code",
+        "country": "acme_sanitize_country_code",
+        "email": "acme_sanitize_email",
+        "ip": "acme_sanitize_ip",
+        "json": "acme_sanitize_json",
+        "html": "acme_sanitize_html",
+        "datetime": "acme_sanitize_datetime",
+        "key": {
+          "function": "acme_sanitize_key",
+          "length": true
+        },
+        "text": {
+          "function": "acme_sanitize_text",
+          "length": true
+        },
+        "textarea": {
+          "function": "acme_sanitize_textarea",
+          "length": true
+        },
+        "path": {
+          "function": "acme_sanitize_path",
+          "length": true
+        },
+        "digits": {
+          "function": "acme_sanitize_digits",
+          "length": true
+        },
+        "code": {
+          "function": "acme_sanitize_discount_code",
+          "length": true
+        },
+        "stripe_id": {
+          "function": "acme_sanitize_stripe_id",
+          "length": true
+        },
+        "color": "acme_sanitize_color",
+        "icon": "acme_sanitize_icon"
+      },
+      "texts": [
+        "text",
+        "longtext"
+      ],
+      "rules": [
+        {
+          "kind": "datetime",
+          "types": [
+            "datetime"
+          ]
+        },
+        {
+          "kind": "flag",
+          "types": [
+            "tinyint"
+          ],
+          "length": 1
+        },
+        {
+          "kind": "id",
+          "types": [
+            "tinyint",
+            "smallint",
+            "mediumint",
+            "int",
+            "bigint"
+          ],
+          "suffixes": [
+            "_id"
+          ]
+        },
+        {
+          "kind": "amount",
+          "types": [
+            "tinyint",
+            "smallint",
+            "mediumint",
+            "int",
+            "bigint"
+          ],
+          "names": [
+            "amount",
+            "total"
+          ],
+          "prefixes": [
+            "amount_"
+          ],
+          "suffixes": [
+            "_amount",
+            "_value",
+            "_fee",
+            "_net"
+          ]
+        },
+        {
+          "kind": "count",
+          "types": [
+            "tinyint",
+            "smallint",
+            "mediumint",
+            "int",
+            "bigint"
+          ]
+        },
+        {
+          "kind": "rate",
+          "types": [
+            "decimal"
+          ],
+          "suffixes": [
+            "_rate"
+          ]
+        },
+        {
+          "kind": null,
+          "types": [
+            "decimal"
+          ]
+        },
+        {
+          "kind": "json",
+          "types": [
+            "text",
+            "longtext"
+          ],
+          "names": [
+            "contents",
+            "payload",
+            "product_ids",
+            "marketing_features",
+            "attribution"
+          ]
+        },
+        {
+          "kind": "textarea",
+          "types": [
+            "text",
+            "longtext"
+          ]
+        },
+        {
+          "kind": "currency",
+          "names": [
+            "currency"
+          ],
+          "suffixes": [
+            "_currency"
+          ]
+        },
+        {
+          "kind": "country",
+          "names": [
+            "country"
+          ]
+        },
+        {
+          "kind": "email",
+          "names": [
+            "email"
+          ]
+        },
+        {
+          "kind": "ip",
+          "names": [
+            "ip"
+          ]
+        },
+        {
+          "kind": "stripe_id",
+          "patterns": [
+            "/^(?=stripe_).*_id$/"
+          ]
+        },
+        {
+          "kind": "path",
+          "names": [
+            "path"
+          ]
+        },
+        {
+          "kind": "color",
+          "names": [
+            "color"
+          ],
+          "suffixes": [
+            "_color"
+          ]
+        },
+        {
+          "kind": "icon",
+          "names": [
+            "icon"
+          ],
+          "suffixes": [
+            "_icon"
+          ]
+        },
+        {
+          "kind": "key",
+          "names": [
+            "status",
+            "type",
+            "taxonomy",
+            "duration",
+            "environment"
+          ],
+          "suffixes": [
+            "_type",
+            "_interval",
+            "_level",
+            "_brand"
+          ]
+        },
+        {
+          "kind": "text"
+        }
+      ]
+    }
+  }
+}

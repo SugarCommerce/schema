@@ -1,0 +1,35 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Generate a plugin's BerlinDB tables and CRUD functions from one JSON file.
+ *
+ * @package SugarCommerce\Schema
+ */
+
+declare( strict_types=1 );
+
+// Installed as a dependency, Composer sets this; run from a clone, the
+// package's own autoloader is two folders up.
+$sugarcommerce_schema_autoload = $GLOBALS['_composer_autoload_path'] ?? dirname( __DIR__ ) . '/vendor/autoload.php';
+
+if ( ! is_file( $sugarcommerce_schema_autoload ) ) {
+	fwrite( STDERR, "schema: run composer install first.\n" );
+	exit( 1 );
+}
+
+require $sugarcommerce_schema_autoload;
+
+// reconcile reads the live tables, so it needs WordPress -- loaded here, at
+// file scope, because wp-config.php sets globals that a function would keep
+// to itself.
+if ( 'reconcile' === ( $argv[1] ?? '' ) ) {
+	$sugarcommerce_schema_load = SugarCommerce\Schema\Cli::wordpress( $argv );
+
+	if ( null === $sugarcommerce_schema_load ) {
+		exit( 1 );
+	}
+
+	require $sugarcommerce_schema_load;
+}
+
+exit( SugarCommerce\Schema\Cli::main( $argv ) );

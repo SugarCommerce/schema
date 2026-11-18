@@ -1,0 +1,14 @@
+{
+  "tickets": {
+    "shape": "13557ebeb270cd21",
+    "version": 202611150
+  },
+  "ticket_replies": {
+    "shape": "4439495196a42c1e",
+    "version": 202611150
+  },
+  "audit_entries": {
+    "shape": "d52bc38e39713348",
+    "version": 202611150
+  }
+}

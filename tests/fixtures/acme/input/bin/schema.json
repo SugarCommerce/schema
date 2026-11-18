@@ -1,0 +1,68 @@
+{
+  "tickets": {
+    "singular": "ticket",
+    "alias": "t",
+    "uuid": true,
+    "meta": true,
+    "functions_dir": "tickets",
+    "why": "A question somebody asked, and everything known about it.",
+    "columns": [
+      { "name": "title", "type": "varchar", "length": 200, "default": "", "searchable": true, "sortable": true },
+      { "name": "status", "type": "varchar", "length": 20, "default": "open", "sortable": true, "index": true },
+      { "name": "urgent", "type": "tinyint", "length": 1, "unsigned": true, "default": "0", "transition": true },
+      { "name": "customer_id", "type": "bigint", "length": 20, "unsigned": true, "default": "0", "index": true },
+      { "name": "reply_count", "type": "int", "length": 11, "unsigned": true, "default": "0", "sortable": true },
+      { "name": "amount_paid", "type": "bigint", "length": 20, "default": "0" },
+      { "name": "refund_value", "type": "bigint", "length": 20, "default": "0" },
+      { "name": "currency", "type": "char", "length": 3, "default": "", "default_function": "acme_get_default_currency" },
+      { "name": "country", "type": "char", "length": 2, "default": "" },
+      { "name": "email", "type": "varchar", "length": 100, "default": "", "searchable": true },
+      { "name": "ip", "type": "varchar", "length": 45, "default": "" },
+      { "name": "stripe_charge_id", "type": "varchar", "length": 100, "default": "" },
+      { "name": "body", "type": "longtext" },
+      { "name": "payload", "type": "longtext" },
+      { "name": "tax_rate", "type": "decimal", "length": 10, "scale": 4, "default": "0" },
+      { "name": "weight", "type": "decimal", "length": 10, "scale": 2, "default": "0" },
+      { "name": "label_color", "type": "varchar", "length": 7, "default": "" },
+      { "name": "icon", "type": "varchar", "length": 60, "default": "" },
+      { "name": "path", "type": "varchar", "length": 255, "default": "" },
+      { "name": "sku", "type": "varchar", "length": 40, "default": "", "sanitize": "acme_clean_sku" },
+      { "name": "notes", "type": "text", "sanitize": false },
+      { "name": "card_last4", "type": "char", "length": 4, "default": "", "kind": "digits" },
+      { "name": "channel_type", "type": "varchar", "length": 20, "default": "email" },
+      { "name": "stage", "type": "varchar", "length": 20, "default": "new", "kind": "key", "transition": false },
+      { "name": "date_closed", "type": "datetime", "allow_null": true, "compare": true, "sortable": true }
+    ],
+    "unique": [ [ "customer_id", "title" ] ],
+    "indexes": [ [ "status", "date_modified" ] ]
+  },
+  "ticket_replies": {
+    "singular": "ticket_reply",
+    "alias": "tr",
+    "uuid": false,
+    "meta": false,
+    "functions_dir": "tickets",
+    "why": "One answer on a ticket.",
+    "columns": [
+      { "name": "ticket_id", "type": "bigint", "length": 20, "unsigned": true, "default": "0", "index": true },
+      { "name": "content", "type": "text", "kind": "html" },
+      { "name": "status", "type": "varchar", "length": 20, "default": "sent", "transition": false },
+      { "name": "token", "type": "char", "length": 64, "default": "", "unique": true, "default_function": "acme_make_token" },
+      { "name": "user_id", "type": "bigint", "length": 20, "unsigned": true, "default": "0", "default_function": "get_current_user_id" }
+    ]
+  },
+  "audit_entries": {
+    "singular": "audit_entry",
+    "alias": "ae",
+    "uuid": false,
+    "meta": true,
+    "functions_dir": "general",
+    "why": "Who changed what, and when.",
+    "columns": [
+      { "name": "object_type", "type": "varchar", "length": 20, "default": "" },
+      { "name": "object_id", "type": "bigint", "length": 20, "unsigned": true, "default": "0" },
+      { "name": "total", "type": "int", "length": 11, "default": "0" },
+      { "name": "date_seen", "type": "date", "default": "" }
+    ]
+  }
+}

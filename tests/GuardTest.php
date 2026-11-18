@@ -166,4 +166,58 @@ final class GuardTest extends TestCase {
 
 		$this->assertSame( "<?php\nfunction acme_ticket_is_late() {}\n", file_get_contents( "{$dir}/functions/tickets/ticket-details.php" ) );
 	}
+
+	/**
+	 * A column named like one of BerlinDB's query arguments is refused,
+	 * before anything is written.
+	 *
+	 * @return void
+	 */
+	public function test_a_column_named_like_a_query_argument_stops_the_run(): void {
+		foreach ( [ 'number', 'order', 'count', 'fields' ] as $name ) {
+			$dir = $this->plugin(
+				[
+					'orders' => [
+						'singular' => 'order',
+						'columns'  => [
+							[ 'name' => 'title', 'type' => 'varchar', 'length' => 20 ],
+							[ 'name' => $name, 'type' => 'varchar', 'length' => 20 ],
+						],
+					],
+				]
+			);
+
+			try {
+				( new Generator( Config::load( $dir ) ) )->generate();
+				$this->fail( "A column called {$name} was accepted." );
+			} catch ( GeneratorException $e ) {
+				$this->assertStringContainsString( "a column cannot be called \"{$name}\"", $e->getMessage() );
+			}
+
+			$this->assertFileDoesNotExist( "{$dir}/src/Database/Tables/Orders.php" );
+		}
+	}
+
+	/**
+	 * A name that only contains one of them is fine.
+	 *
+	 * @return void
+	 */
+	public function test_a_column_containing_a_reserved_word_is_allowed(): void {
+		$dir = $this->plugin(
+			[
+				'orders' => [
+					'singular' => 'order',
+					'columns'  => [
+						[ 'name' => 'order_number', 'type' => 'varchar', 'length' => 20 ],
+						[ 'name' => 'sort_order', 'type' => 'int', 'length' => 10 ],
+					],
+				],
+			]
+		);
+
+		( new Generator( Config::load( $dir ) ) )->generate();
+
+		$this->assertFileExists( "{$dir}/src/Database/Tables/Orders.php" );
+	}
 }

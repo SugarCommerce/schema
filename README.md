@@ -106,6 +106,12 @@ Anything BerlinDB's `Column` takes is written through: `type`, `length`,
 Table-level `"unique"` and `"indexes"` take lists of column lists:
 `"indexes": [ [ "status", "date_modified" ] ]`.
 
+A column cannot take a name BerlinDB's query keeps for itself -- `number`,
+`order`, `count`, `fields`, `offset` and the rest of `Generator::RESERVED`.
+Every column is also a query argument, so a `number` column would turn the
+generated functions' `'number' => 0` into `WHERE number = ''`. The run stops
+and asks for a name like `order_number`.
+
 ## Kinds
 
 BerlinDB calls a column's `validate` callback with the value on every insert

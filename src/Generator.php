@@ -28,6 +28,44 @@ namespace SugarCommerce\Schema;
 final class Generator {
 
 	/**
+	 * Names BerlinDB's Query keeps for itself.
+	 *
+	 * Every column is also a query argument of the same name, and these are
+	 * the arguments that say how to query rather than what to match: a column
+	 * called `number` turns the generated `_count_` and `_get_` functions'
+	 * `'number' => 0` into `WHERE number = ''`. BerlinDB means the control
+	 * meaning to win and logs a warning nobody reads; as tested (a22276b),
+	 * the filter wins.
+	 * Either way the column cannot be asked for by name, so it is refused
+	 * here, where the fix is a rename and costs nothing.
+	 *
+	 * @since 1.0.0
+	 */
+	public const RESERVED = [
+		'aggregate',
+		'by',
+		'cache_results',
+		'count',
+		'criteria',
+		'distinct',
+		'explain',
+		'fields',
+		'groupby',
+		'having',
+		'index_hints',
+		'no_found_rows',
+		'number',
+		'offset',
+		'order',
+		'orderby',
+		'select',
+		'update_item_cache',
+		'update_meta_cache',
+		'with',
+	];
+
+
+	/**
 	 * The tables, as arrays, by plural name.
 	 *
 	 * @var array<string, array<string, mixed>>
@@ -86,6 +124,14 @@ final class Generator {
 
 			if ( ! is_array( $table ) || ! isset( $table['singular'], $table['columns'] ) ) {
 				throw new GeneratorException( "{$plural} needs at least \"singular\" and \"columns\"." );
+			}
+
+			foreach ( (array) $table['columns'] as $column ) {
+				$name = (string) ( $column['name'] ?? '' );
+
+				if ( in_array( $name, self::RESERVED, true ) ) {
+					throw new GeneratorException( "{$plural}: a column cannot be called \"{$name}\". BerlinDB reads \"{$name}\" as an instruction to the query, so the generated functions would filter on the column instead -- a count of every row comes back nought. Name it for what it holds: \"{$plural}_{$name}\", \"{$table['singular']}_{$name}\"." );
+				}
 			}
 
 			$this->tables[ (string) $plural ]  = $table;

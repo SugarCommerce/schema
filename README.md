@@ -86,7 +86,10 @@ composer require --dev sugarcommerce/schema
 Then `composer schema:generate` writes `src/Database/{Schemas,Tables,Queries,Rows}/`,
 `src/Database/Components/Core.php`, `functions/tickets/tickets.php` and
 `bin/schema.lock.json`. Every table gets an `id`, `date_created` and
-`date_modified`; `"uuid": true` adds a `uuid`, and `"meta": true` a meta table.
+`date_modified`; `"uuid": true` adds a `uuid`, and `"meta": true` a meta table
+with `acme_add_ticket_meta()`, `_get_`, `_update_`, `_delete_` and
+`acme_delete_ticket_meta_by_key()`, which removes a key from every ticket
+through `delete_metadata()`'s delete-all mode, so core clears the caches.
 
 ## Columns
 

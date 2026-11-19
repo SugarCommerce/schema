@@ -354,3 +354,18 @@ function acme_update_ticket_meta( int $id, string $key, $value, $prev = '' ) {
 function acme_delete_ticket_meta( int $id, string $key, $value = '' ): bool {
 	return delete_metadata( 'acme_ticket', $id, $key, $value );
 }
+
+/**
+ * Delete a meta key from every ticket.
+ *
+ * Runs WordPress's delete_metadata() in delete-all mode, so the delete hooks
+ * fire and every affected ticket's meta cache is cleared.
+ *
+ * @param string $key Meta key.
+ *
+ * @return bool False when no ticket had the key.
+ * @since 1.0.0
+ */
+function acme_delete_ticket_meta_by_key( string $key ): bool {
+	return delete_metadata( 'acme_ticket', 0, $key, '', true );
+}

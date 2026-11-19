@@ -56,3 +56,18 @@ function {fp}_update_{sing}_meta( int $id, string $key, $value, $prev = '' ) {
 function {fp}_delete_{sing}_meta( int $id, string $key, $value = '' ): bool {
 	return delete_metadata( '{meta_type}', $id, $key, $value );
 }
+
+/**
+ * Delete a meta key from every {label}.
+ *
+ * Runs WordPress's delete_metadata() in delete-all mode, so the delete hooks
+ * fire and every affected {label}'s meta cache is cleared.
+ *
+ * @param string $key Meta key.
+ *
+ * @return bool False when no {label} had the key.
+ * @since 1.0.0
+ */
+function {fp}_delete_{sing}_meta_by_key( string $key ): bool {
+	return delete_metadata( '{meta_type}', 0, $key, '', true );
+}

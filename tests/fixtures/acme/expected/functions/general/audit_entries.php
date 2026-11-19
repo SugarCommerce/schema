@@ -354,3 +354,18 @@ function acme_update_audit_entry_meta( int $id, string $key, $value, $prev = '' 
 function acme_delete_audit_entry_meta( int $id, string $key, $value = '' ): bool {
 	return delete_metadata( 'acme_audit_entry', $id, $key, $value );
 }
+
+/**
+ * Delete a meta key from every audit entry.
+ *
+ * Runs WordPress's delete_metadata() in delete-all mode, so the delete hooks
+ * fire and every affected audit entry's meta cache is cleared.
+ *
+ * @param string $key Meta key.
+ *
+ * @return bool False when no audit entry had the key.
+ * @since 1.0.0
+ */
+function acme_delete_audit_entry_meta_by_key( string $key ): bool {
+	return delete_metadata( 'acme_audit_entry', 0, $key, '', true );
+}

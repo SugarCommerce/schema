@@ -155,6 +155,132 @@ function acme_count_tickets( array $args = array() ): int {
 }
 
 /**
+ * Count tickets, one figure for each value of a column.
+ *
+ * One query -- `COUNT(*)` grouped by the column -- over the rows
+ * acme_get_tickets() would match with the same arguments.
+ *
+ * @param array  $args   Query arguments.
+ * @param string $column The column to count by.
+ *
+ * @return array<string, int> How many, by the column's value. Empty when
+ *                            nothing matched or there is no such column.
+ * @since 1.0.0
+ */
+function acme_get_ticket_counts( array $args = array(), string $column = 'status' ): array {
+	$rows = ( new Ticket() )->query(
+		array_merge(
+			array_diff_key( $args, array_flip( array( 'count', 'fields', 'offset', 'orderby', 'order' ) ) ),
+			array(
+				'number'    => 0,
+				'groupby'   => $column,
+				'aggregate' => array( 'count' => array( 'count', '*' ) ),
+			)
+		)
+	);
+
+	$counts = array();
+
+	// Not grouped -- a column the table does not have -- is one figure and
+	// not a row per value, so nothing here.
+	foreach ( (array) $rows as $row ) {
+		if ( is_array( $row ) && array_key_exists( $column, $row ) ) {
+			$counts[ (string) $row[ $column ] ] = (int) ( $row['count'] ?? 0 );
+		}
+	}
+
+	/**
+	 * Filter the ticket counts.
+	 *
+	 * @param array  $counts How many, by the column's value.
+	 * @param array  $args   Query arguments.
+	 * @param string $column The column counted by.
+	 *
+	 * @since 1.0.0
+	 */
+	$counts = (array) apply_filters( 'acme_get_ticket_counts', $counts, $args, $column );
+
+	return $counts;
+}
+
+/**
+ * One figure over the tickets a query matches: a sum, an average, the
+ * smallest or largest value, or how many values a column has.
+ *
+ * One query, over the rows acme_get_tickets() would match with the same
+ * arguments. With `groupby` among them, one figure for each value of that
+ * column: money is summed by currency.
+ *
+ * @param string $function `sum`, `avg`, `min`, `max` or `count`.
+ * @param string $column   The column (`*` to count rows); `sum` and `avg`
+ *                         need a numeric one.
+ * @param array  $args     Query arguments, and `groupby` for one figure a
+ *                         value.
+ *
+ * @return int|float|string|array<string, int|float|string> Nought when
+ *                                                          nothing matched,
+ *                                                          or the function
+ *                                                          or column is not
+ *                                                          one there is.
+ * @since 1.0.0
+ */
+function acme_get_ticket_stats( string $function, string $column, array $args = array() ) {
+	$function = strtolower( $function );
+	$groupby  = (string) ( $args['groupby'] ?? '' );
+	$query    = new Ticket();
+	$value    = '' === $groupby ? 0 : array();
+
+	// Refused here and not left to the query: an aggregate it cannot build
+	// is dropped, and what is left is an ordinary query for every row.
+	$known = in_array( $function, array( 'sum', 'avg', 'min', 'max', 'count' ), true );
+
+	if ( $known && ! ( 'count' === $function && '*' === $column ) ) {
+		$found = $query->get_column_by( array( 'name' => $column ) );
+		$known = $found && ( ! in_array( $function, array( 'sum', 'avg' ), true ) || $found->is_numeric() );
+	}
+
+	if ( $known ) {
+		$result = $query->query(
+			array_merge(
+				array_diff_key( $args, array_flip( array( 'count', 'fields', 'offset', 'orderby', 'order' ) ) ),
+				array(
+					'number'    => 0,
+					'aggregate' => array( 'value' => array( $function, $column ) ),
+				)
+			)
+		);
+
+		$figure = static function ( $raw ) {
+			return is_numeric( $raw ) ? $raw + 0 : ( null === $raw ? 0 : (string) $raw );
+		};
+
+		if ( '' === $groupby ) {
+			$value = is_array( $result ) && array_key_exists( 'value', $result ) ? $figure( $result['value'] ) : 0;
+		} else {
+			foreach ( (array) $result as $row ) {
+				if ( is_array( $row ) && array_key_exists( $groupby, $row ) ) {
+					$value[ (string) $row[ $groupby ] ] = $figure( $row['value'] ?? null );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Filter a figure over tickets.
+	 *
+	 * @param int|float|string|array $value    The figure, or figures by `groupby`.
+	 * @param string                 $function `sum`, `avg`, `min`, `max` or `count`.
+	 * @param string                 $column   The column.
+	 * @param array                  $args     Query arguments.
+	 *
+	 * @since 1.0.0
+	 */
+	$value = apply_filters( 'acme_get_ticket_stats', $value, $function, $column, $args );
+
+	return $value;
+}
+
+/**
  * Add a ticket.
  *
  * @param array $data Column values.

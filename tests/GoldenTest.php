@@ -107,7 +107,7 @@ final class GoldenTest extends TestCase {
 		$this->assertSame( 2, $done['meta'] );
 		$this->assertSame( 3, $done['components'] );
 		$this->assertSame( 3, $done['functions'] );
-		$this->assertSame( 39, $done['hooks'] );
+		$this->assertSame( 45, $done['hooks'] );
 	}
 
 	/**

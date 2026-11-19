@@ -51,7 +51,7 @@ final class CliTest extends TestCase {
 		[ $code, $out ] = self::cli( 'generate', "--root={$dir}" );
 
 		$this->assertSame( 0, $code );
-		$this->assertSame( "  17 files | 5 tables (3 base + 2 meta) | 3 components\n  3 files | 39 extension points\n", $out );
+		$this->assertSame( "  17 files | 5 tables (3 base + 2 meta) | 3 components\n  3 files | 45 extension points\n", $out );
 
 		[ $code, $out ] = self::cli( 'check', "--root={$dir}" );
 

@@ -25,6 +25,11 @@ two are meant to be used together.
   class that registers them
 * Generate `{prefix}_get_order()`, `_add_`, `_update_`, `_delete_`, `_count_`
   and the meta functions, each with a filter or a before/after action pair
+* Generate the figures a report or an add-on needs without SQL:
+  `{prefix}_get_order_counts( $args, 'status' )` (how many of each status, one
+  `GROUP BY` query) and `{prefix}_get_order_stats( 'sum', 'amount_total', $args )`
+  (`sum`, `avg`, `min`, `max` or `count`; `groupby` in the arguments for one
+  figure a value, such as a sum per currency), over the rows `_get_` would match
 * Give each column a save-time callback, worked out from its name and type
 * Fill a new row's column from a function, such as the store's currency
 * Raise a table's version only when its shape changes, so BerlinDB adds the

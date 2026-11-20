@@ -241,6 +241,8 @@ final class GuardTest extends TestCase {
 			'length'          => [ 'orders', [ 'singular' => 'order', 'columns' => [ [ 'length' => "20'" ] + $column ] ] ],
 			'default_function' => [ 'orders', [ 'singular' => 'order', 'columns' => [ [ 'default_function' => 'f(); exit' ] + $column ] ] ],
 			'index'           => [ 'orders', [ 'singular' => 'order', 'indexes' => [ [ "title'" ] ] ] ],
+			'index prefix'    => [ 'orders', [ 'singular' => 'order', 'indexes' => [ [ 'title(191); DROP' ] ] ] ],
+			'index zero'      => [ 'orders', [ 'singular' => 'order', 'indexes' => [ [ 'title(0)' ] ] ] ],
 		];
 
 		foreach ( $bad as $what => [ $plural, $table ] ) {
@@ -255,6 +257,30 @@ final class GuardTest extends TestCase {
 
 			$this->assertSame( [ 'bin/schema.json', 'composer.json' ], self::files( $dir ), "Nothing is written for a bad {$what}." );
 		}
+	}
+
+	/**
+	 * A long text column indexed by its first characters: the length goes
+	 * to BerlinDB with the column, and the index is named after the column.
+	 *
+	 * @return void
+	 */
+	public function test_an_index_can_take_a_prefix_length(): void {
+		$dir = $this->plugin(
+			[
+				'files' => [
+					'singular' => 'file',
+					'columns'  => [ [ 'name' => 'path', 'type' => 'varchar', 'length' => 1000, 'default' => '' ] ],
+					'indexes'  => [ [ 'path(191)' ] ],
+				],
+			]
+		);
+
+		( new Generator( Config::load( $dir ) ) )->generate();
+
+		$code = (string) file_get_contents( "{$dir}/src/Database/Schemas/Files.php" );
+
+		$this->assertMatchesRegularExpression( "/'name'\s*=>\s*'path',\s*'columns'\s*=>\s*array\( 'path\(191\)' \)/", $code );
 	}
 
 	/**

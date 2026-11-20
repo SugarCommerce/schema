@@ -83,6 +83,14 @@ final class Generator {
 	public const string IDENTIFIER = '/^[a-z][a-z0-9_]*$/';
 
 	/**
+	 * What a column in an index list may be: a name, or a name with the
+	 * length of its prefix, `path(191)`, for a long text column.
+	 *
+	 * @since 1.0.0
+	 */
+	public const string INDEX_COLUMN = '/^[a-z][a-z0-9_]*(\([1-9][0-9]{0,3}\))?$/';
+
+	/**
 	 * What a column's type, length and scale may be.
 	 *
 	 * @var array<string, string>
@@ -377,7 +385,7 @@ final class Generator {
 		foreach ( [ 'indexes', 'unique' ] as $key ) {
 			foreach ( (array) ( $table[ $key ] ?? [] ) as $columns ) {
 				foreach ( (array) $columns as $name ) {
-					self::refuse_unless( $plural, "a column in \"{$key}\"", $name, self::IDENTIFIER );
+					self::refuse_unless( $plural, "a column in \"{$key}\"", $name, self::INDEX_COLUMN );
 				}
 			}
 		}

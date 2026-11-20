@@ -115,7 +115,9 @@ Table-level `"unique"` and `"indexes"` take lists of column lists:
 `"indexes": [ [ "status", "date_modified" ] ]`. An index is named after its
 columns joined with `_`; past MySQL's 64 characters (a covering index of many
 columns) it keeps the first 55 and ends with eight characters of a hash of the
-whole, so the name is the same on every run.
+whole, so the name is the same on every run. A long text column is indexed by
+its first characters with the length after its name, `[ "path(191)" ]`; the
+index is still named `path`.
 
 A column cannot take a name BerlinDB's query keeps for itself -- `number`,
 `order`, `count`, `fields`, `offset` and the rest of `Generator::RESERVED`.

@@ -45,6 +45,14 @@ final class IndexNameTest extends TestCase {
 	}
 
 	/**
+	 * A prefix length is part of the index and not of its name.
+	 */
+	public function test_a_prefix_length_is_left_out_of_the_name(): void {
+		$this->assertSame( 'path', Columns::index_name( [ 'path(191)' ] ) );
+		$this->assertSame( 'status_title', Columns::index_name( [ 'status', 'title(100)' ] ) );
+	}
+
+	/**
 	 * The table's index list uses it, for plain and unique indexes alike.
 	 */
 	public function test_indexes_use_it(): void {

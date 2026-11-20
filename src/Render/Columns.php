@@ -192,13 +192,16 @@ final class Columns {
 	 * and ends with eight of its own hash, so it stays the same on every
 	 * run and two such indexes on one table cannot share a name.
 	 *
+	 * A column indexed by its first characters, `path(191)`, is named
+	 * without them: `path`.
+	 *
 	 * @param array<int, string> $columns The columns, in order.
 	 *
 	 * @return string
 	 * @since 1.0.0
 	 */
 	public static function index_name( array $columns ): string {
-		$name = implode( '_', $columns );
+		$name = implode( '_', array_map( static fn( string $column ): string => (string) preg_replace( '/\(\d+\)$/', '', $column ), $columns ) );
 
 		if ( strlen( $name ) <= self::NAME_LIMIT ) {
 			return $name;

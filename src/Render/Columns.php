@@ -34,6 +34,13 @@ final class Columns {
 	private const array FLAGS = [ 'unsigned', 'primary', 'searchable', 'sortable', 'allow_null', 'uuid', 'date_query', 'compare', 'cache_key', 'created', 'modified' ];
 
 	/**
+	 * The longest name MySQL takes for an index.
+	 *
+	 * @since 1.0.0
+	 */
+	private const int NAME_LIMIT = 64;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Config $config The settings.
@@ -137,7 +144,7 @@ final class Columns {
 
 		foreach ( (array) ( $table['unique'] ?? [] ) as $columns ) {
 			$out[] = [
-				'name'    => implode( '_', (array) $columns ),
+				'name'    => self::index_name( (array) $columns ),
 				'columns' => (array) $columns,
 				'unique'  => true,
 			];
@@ -155,7 +162,7 @@ final class Columns {
 
 		foreach ( (array) ( $table['indexes'] ?? [] ) as $columns ) {
 			$out[] = [
-				'name'    => implode( '_', (array) $columns ),
+				'name'    => self::index_name( (array) $columns ),
 				'columns' => (array) $columns,
 			];
 		}
@@ -175,6 +182,29 @@ final class Columns {
 		];
 
 		return $out;
+	}
+
+	/**
+	 * What an index over some columns is called: their names joined.
+	 *
+	 * MySQL refuses a name longer than 64 characters, and a covering index
+	 * names a good many columns. A longer one keeps its first 55 characters
+	 * and ends with eight of its own hash, so it stays the same on every
+	 * run and two such indexes on one table cannot share a name.
+	 *
+	 * @param array<int, string> $columns The columns, in order.
+	 *
+	 * @return string
+	 * @since 1.0.0
+	 */
+	public static function index_name( array $columns ): string {
+		$name = implode( '_', $columns );
+
+		if ( strlen( $name ) <= self::NAME_LIMIT ) {
+			return $name;
+		}
+
+		return substr( $name, 0, self::NAME_LIMIT - 9 ) . '_' . substr( md5( $name ), 0, 8 );
 	}
 
 	/**

@@ -112,7 +112,10 @@ Anything BerlinDB's `Column` takes is written through: `type`, `length`,
 | `"unsigned": false` | A number that can be negative. BerlinDB makes every number unsigned unless told |
 
 Table-level `"unique"` and `"indexes"` take lists of column lists:
-`"indexes": [ [ "status", "date_modified" ] ]`.
+`"indexes": [ [ "status", "date_modified" ] ]`. An index is named after its
+columns joined with `_`; past MySQL's 64 characters (a covering index of many
+columns) it keeps the first 55 and ends with eight characters of a hash of the
+whole, so the name is the same on every run.
 
 A column cannot take a name BerlinDB's query keeps for itself -- `number`,
 `order`, `count`, `fields`, `offset` and the rest of `Generator::RESERVED`.

@@ -75,7 +75,7 @@ final class Config {
 			'schema' => '',
 			'table'  => '',
 			'row'    => '',
-			'query'  => 'SugarCommerce\\Data\\Query',
+			'query'  => '',
 		],
 		'paths'             => [
 			'classes'   => 'src/Database',
@@ -346,6 +346,13 @@ final class Config {
 			if ( '' === $v['bases'][ $key ] ) {
 				$v['bases'][ $key ] = $v['kern'] . '\\' . $class;
 			}
+		}
+
+		// sugarcommerce/data's Query, beside this package: named from this
+		// namespace rather than written out, so a build that renames one
+		// renames the other.
+		if ( '' === $v['bases']['query'] ) {
+			$v['bases']['query'] = substr( __NAMESPACE__, 0, (int) strrpos( __NAMESPACE__, '\\' ) ) . '\\Data\\Query';
 		}
 
 		foreach ( $v['bases'] as $key => $class ) {

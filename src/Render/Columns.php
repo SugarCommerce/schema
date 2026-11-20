@@ -66,6 +66,10 @@ final class Columns {
 				'unsigned'  => true,
 				'extra'     => 'auto_increment',
 				'sortable'  => true,
+				// `id_compare`: a batch read by key, `id > the last one`,
+				// costs the same however far through the table it is; an
+				// OFFSET counts its way past every row before.
+				'compare'   => true,
 				'cache_key' => true,
 			],
 		];

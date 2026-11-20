@@ -38,6 +38,7 @@ class TicketReplies extends Schema {
 			'length'    => '20',
 			'unsigned'  => true,
 			'sortable'  => true,
+			'compare'   => true,
 			'cache_key' => true,
 			'extra'     => 'auto_increment',
 		),

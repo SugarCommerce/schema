@@ -10,7 +10,11 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Render;
+
+use SugarCommerce\Schema\Config;
+use SugarCommerce\Schema\GeneratorException;
+use SugarCommerce\Schema\Support\Value;
 
 /**
  * The shape of a stored value.

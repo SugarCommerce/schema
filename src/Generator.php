@@ -12,6 +12,12 @@ declare( strict_types=1 );
 
 namespace SugarCommerce\Schema;
 
+use SugarCommerce\Schema\Render\Classes;
+use SugarCommerce\Schema\Render\Functions;
+use SugarCommerce\Schema\Render\Versions;
+use SugarCommerce\Schema\Support\Json;
+use SugarCommerce\Schema\Support\Value;
+
 /**
  * Generate the database layer and the CRUD API from the schema.
  *
@@ -41,7 +47,7 @@ final class Generator {
 	 *
 	 * @since 1.0.0
 	 */
-	public const RESERVED = [
+	public const array RESERVED = [
 		'aggregate',
 		'by',
 		'cache_results',
@@ -63,6 +69,46 @@ final class Generator {
 		'update_meta_cache',
 		'with',
 	];
+
+	/**
+	 * What a table, column, index or alias may be called.
+	 *
+	 * Each is written into PHP and SQL as it stands -- between quotes, after
+	 * a function prefix, as a file name -- so anything but a lowercase
+	 * identifier would end the string around it or name a file elsewhere.
+	 *
+	 * @var string
+	 * @since 1.0.0
+	 */
+	public const string IDENTIFIER = '/^[a-z][a-z0-9_]*$/';
+
+	/**
+	 * What a column's type, length and scale may be.
+	 *
+	 * @var array<string, string>
+	 * @since 1.0.0
+	 */
+	private const array SHAPES = [
+		'type'   => '/^[a-z]+$/',
+		'length' => '/^[0-9]+$/',
+		'scale'  => '/^[0-9]+$/',
+	];
+
+	/**
+	 * A function a column names: `myshop_get_currency`, `\\MyShop\\currency`.
+	 *
+	 * @var string
+	 * @since 1.0.0
+	 */
+	private const string FUNCTION_NAME = '/^\\\\?[A-Za-z_][A-Za-z0-9_]*(?:\\\\[A-Za-z_][A-Za-z0-9_]*)*$/';
+
+	/**
+	 * A folder of functions under the functions path: `orders`, `shop/orders`.
+	 *
+	 * @var string
+	 * @since 1.0.0
+	 */
+	private const string FOLDER = '#^[a-z0-9_-]+(?:/[a-z0-9_-]+)*/?$#';
 
 
 	/**
@@ -125,6 +171,8 @@ final class Generator {
 			if ( ! is_array( $table ) || ! isset( $table['singular'], $table['columns'] ) ) {
 				throw new GeneratorException( "{$plural} needs at least \"singular\" and \"columns\"." );
 			}
+
+			self::check_names( (string) $plural, $table );
 
 			foreach ( (array) $table['columns'] as $column ) {
 				$name = (string) ( $column['name'] ?? '' );
@@ -287,6 +335,74 @@ final class Generator {
 		$lock = json_decode( (string) file_get_contents( $file ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- A local file, read by a command-line tool.
 
 		return is_array( $lock ) ? $lock : [];
+	}
+
+	/**
+	 * Refuse a name that would not stay a name in the code written from it.
+	 *
+	 * The schema file is the plugin's own, but what is in it is written
+	 * into PHP strings, SQL and file paths without further quoting, so a
+	 * stray quote, a type with a statement after it or a folder of `..`
+	 * is stopped here, before anything is written.
+	 *
+	 * @param string               $plural The table's key.
+	 * @param array<string, mixed> $table  Its entry.
+	 *
+	 * @return void
+	 * @throws GeneratorException When a name is not one.
+	 * @since 1.0.0
+	 */
+	private static function check_names( string $plural, array $table ): void {
+		self::refuse_unless( $plural, 'the table', $plural, self::IDENTIFIER );
+		self::refuse_unless( $plural, '"singular"', $table['singular'], self::IDENTIFIER );
+		self::refuse_unless( $plural, '"alias"', $table['alias'] ?? null, self::IDENTIFIER );
+		self::refuse_unless( $plural, '"functions_dir"', $table['functions_dir'] ?? null, self::FOLDER );
+
+		foreach ( (array) $table['columns'] as $column ) {
+			$column = (array) $column;
+
+			self::refuse_unless( $plural, 'a column name', $column['name'] ?? null, self::IDENTIFIER );
+
+			foreach ( self::SHAPES as $key => $pattern ) {
+				self::refuse_unless( $plural, "\"{$key}\"", $column[ $key ] ?? null, $pattern );
+			}
+
+			foreach ( [ 'default_function', 'sanitize' ] as $key ) {
+				if ( is_string( $column[ $key ] ?? null ) ) {
+					self::refuse_unless( $plural, "\"{$key}\"", $column[ $key ], self::FUNCTION_NAME );
+				}
+			}
+		}
+
+		foreach ( [ 'indexes', 'unique' ] as $key ) {
+			foreach ( (array) ( $table[ $key ] ?? [] ) as $columns ) {
+				foreach ( (array) $columns as $name ) {
+					self::refuse_unless( $plural, "a column in \"{$key}\"", $name, self::IDENTIFIER );
+				}
+			}
+		}
+	}
+
+	/**
+	 * One value against its pattern. Not given, or empty, passes.
+	 *
+	 * @param string $plural  The table's key.
+	 * @param string $what    What it is, for the message.
+	 * @param mixed  $value   The value.
+	 * @param string $pattern What it must match.
+	 *
+	 * @return void
+	 * @throws GeneratorException When it does not match.
+	 * @since 1.0.0
+	 */
+	private static function refuse_unless( string $plural, string $what, mixed $value, string $pattern ): void {
+		if ( null === $value || '' === $value ) {
+			return;
+		}
+
+		if ( ! is_scalar( $value ) || 1 !== preg_match( $pattern, (string) $value ) ) {
+			throw new GeneratorException( sprintf( '%s: %s %s is not allowed -- it is written into the generated PHP and SQL as it stands. Use lowercase letters, digits and underscores.', $plural, $what, Json::encode( is_scalar( $value ) ? $value : get_debug_type( $value ) ) ) );
+		}
 	}
 
 	/**

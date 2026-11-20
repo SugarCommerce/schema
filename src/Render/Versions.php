@@ -10,7 +10,10 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Render;
+
+use SugarCommerce\Schema\Config;
+use SugarCommerce\Schema\Support\Json;
 
 /**
  * Table versions, kept in the lock file.

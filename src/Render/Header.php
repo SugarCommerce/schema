@@ -10,7 +10,9 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Render;
+
+use SugarCommerce\Schema\Config;
 
 /**
  * File headers, from the plugin's settings.

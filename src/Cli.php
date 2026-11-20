@@ -33,7 +33,7 @@ final class Cli {
 	 *
 	 * @since 1.0.0
 	 */
-	private const USAGE = <<<'TXT'
+	private const string USAGE = <<<'TXT'
 Usage: schema <command> [options]
 
   generate [--only=table,...]   Write the classes, functions and lock file

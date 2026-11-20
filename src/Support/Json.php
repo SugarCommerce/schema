@@ -10,7 +10,7 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Support;
 
 /**
  * A stable JSON encoder.

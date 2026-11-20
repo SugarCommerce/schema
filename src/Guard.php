@@ -12,6 +12,8 @@ declare( strict_types=1 );
 
 namespace SugarCommerce\Schema;
 
+use SugarCommerce\Schema\Render\Functions;
+
 /**
  * The checks that stop a run before it eats code.
  *

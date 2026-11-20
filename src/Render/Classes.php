@@ -10,7 +10,10 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Render;
+
+use SugarCommerce\Schema\Config;
+use SugarCommerce\Schema\Support\Value;
 
 /**
  * Writes the Schema, Table, Query and Row classes, and the class that
@@ -80,7 +83,7 @@ final class Classes {
 		$sing   = (string) $table['singular'];
 		$single = self::studly( $sing );
 		$many   = self::studly( $plural );
-		$why    = Value::truthy( $table['why'] ?? null ) ? Value::text( $table['why'] ) : ucfirst( str_replace( '_', ' ', $plural ) ) . '.';
+		$why    = Value::truthy( $table['why'] ?? null ) ? Value::comment( Value::text( $table['why'] ) ) : ucfirst( str_replace( '_', ' ', $plural ) ) . '.';
 		$out    = [];
 
 		$out[ "{$dir}/Schemas/{$many}.php" ] = $this->schema_class( $many, $why, Columns::base( $table ), Columns::indexes( $table ) );

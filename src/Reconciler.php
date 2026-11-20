@@ -12,6 +12,9 @@ declare( strict_types=1 );
 
 namespace SugarCommerce\Schema;
 
+use SugarCommerce\Schema\Render\Classes;
+use SugarCommerce\Schema\Support\Value;
+
 /**
  * Live tables against their Schema classes.
  *
@@ -157,11 +160,29 @@ final class Reconciler {
 
 		for ( $i = $index - 1; $i >= 0; $i-- ) {
 			if ( in_array( $want[ $i ], $live, true ) ) {
-				return 'AFTER `' . $want[ $i ] . '`';
+				return 'AFTER ' . self::identifier( $want[ $i ] );
 			}
 		}
 
 		return 'FIRST';
+	}
+
+	/**
+	 * A table or column name quoted for MySQL.
+	 *
+	 * The names come from the database (SHOW TABLES, SHOW COLUMNS) and from
+	 * the Schema classes, and go into DDL, so they are quoted the way
+	 * wpdb's `%i` quotes them: in backticks, any backtick inside doubled. A
+	 * live column named with a backtick in it stays one name instead of
+	 * adding a clause of its own to an ALTER TABLE.
+	 *
+	 * @param string $name The name.
+	 *
+	 * @return string
+	 * @since 1.0.0
+	 */
+	public static function identifier( string $name ): string {
+		return '`' . str_replace( '`', '``', $name ) . '`';
 	}
 
 	/**
@@ -173,7 +194,7 @@ final class Reconciler {
 	 * @since 1.0.0
 	 */
 	public static function column_sql( array $column ): string {
-		$sql = '`' . $column['name'] . '` ' . $column['type'];
+		$sql = self::identifier( $column['name'] ) . ' ' . $column['type'];
 
 		if ( isset( $column['length'] ) && '' !== $column['length'] ) {
 			// A decimal carries its digits after the point as a second figure.
@@ -205,7 +226,13 @@ final class Reconciler {
 		}
 
 		if ( null !== $default ) {
-			$sql .= " DEFAULT '" . $default . "'";
+			$sql .= " DEFAULT '" . strtr(
+				(string) $default,
+				[
+					'\\' => '\\\\',
+					"'"  => "''",
+				]
+			) . "'";
 		} elseif ( $nullable ) {
 			$sql .= ' DEFAULT NULL';
 		}
@@ -269,7 +296,8 @@ final class Reconciler {
 
 			$definitions = self::declared_definitions( (string) file_get_contents( $file ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- A local file, read by a command-line tool.
 			$want        = array_keys( $definitions );
-			$live        = (array) $db->get_col( "SHOW COLUMNS FROM `{$table}`" );
+			$quoted      = self::identifier( $table );
+			$live        = (array) $db->get_col( "SHOW COLUMNS FROM {$quoted}" );
 
 			$missing = array_values( array_diff( $want, $live ) );
 			$extra   = array_values( array_diff( $live, $want ) );
@@ -318,7 +346,7 @@ final class Reconciler {
 					continue;
 				}
 
-				$db->query( "ALTER TABLE `{$table}` ADD COLUMN {$sql} {$after}" );
+				$db->query( "ALTER TABLE {$quoted} ADD COLUMN {$sql} {$after}" );
 
 				'' === $db->last_error
 					? ++$added
@@ -335,7 +363,7 @@ final class Reconciler {
 					continue;
 				}
 
-				$db->query( "ALTER TABLE `{$table}` MODIFY COLUMN {$sql} {$after}" );
+				$db->query( "ALTER TABLE {$quoted} MODIFY COLUMN {$sql} {$after}" );
 
 				'' === $db->last_error
 					? ++$moved
@@ -356,14 +384,15 @@ final class Reconciler {
 				//
 				// A migration is what renames a column. This only removes one
 				// that no longer holds anything.
-				$rows = (int) $db->get_var( "SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` IS NOT NULL AND `{$column}` != '' AND `{$column}` != 0" );
+				$name = self::identifier( $column );
+				$rows = (int) $db->get_var( "SELECT COUNT(*) FROM {$quoted} WHERE {$name} IS NOT NULL AND {$name} != '' AND {$name} != 0" );
 
 				if ( $rows > 0 && ! $force ) {
 					printf( "      left alone: %d rows still have a value. If this is a rename, migrate it; --force to drop anyway.\n", $rows );
 					continue;
 				}
 
-				$db->query( "ALTER TABLE `{$table}` DROP COLUMN `{$column}`" );
+				$db->query( "ALTER TABLE {$quoted} DROP COLUMN {$name}" );
 
 				'' === $db->last_error
 					? ++$dropped
@@ -394,8 +423,8 @@ final class Reconciler {
 			echo "\nTables with no schema in the code:\n";
 
 			foreach ( $orphans as $orphan ) {
-				$name = $prefix . $orphan;
-				$rows = (int) $db->get_var( "SELECT COUNT(*) FROM `{$name}`" );
+				$name = self::identifier( $prefix . $orphan );
+				$rows = (int) $db->get_var( "SELECT COUNT(*) FROM {$name}" );
 
 				printf( "    %-26s %d rows\n", $orphan, $rows );
 
@@ -412,7 +441,7 @@ final class Reconciler {
 					continue;
 				}
 
-				$db->query( "DROP TABLE `{$name}`" );
+				$db->query( "DROP TABLE {$name}" );
 
 				'' === $db->last_error
 					? printf( "      dropped\n" )

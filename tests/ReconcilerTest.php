@@ -394,4 +394,24 @@ final class ReconcilerTest extends TestCase {
 
 		Reconciler::find_wordpress( $this->folder(), $this->folder() );
 	}
+
+	/**
+	 * A live column whose name carries a backtick stays one name in every
+	 * statement --apply --drop writes, so it cannot add a clause of its own;
+	 * and a default with a quote stays one string.
+	 *
+	 * @return void
+	 */
+	public function test_names_from_the_database_stay_names(): void {
+		$live = [ 'id', 'object_type', 'object_id', 'total', 'x` , DROP COLUMN `total', 'date_seen', 'date_created', 'date_modified' ];
+
+		[ $reconciler, $db ] = $this->reconciler( [ 'audit_entries' => $live ] );
+
+		self::reconcile_run( $reconciler, true, true, true );
+
+		$this->assertContains( 'ALTER TABLE `wp_acme_audit_entries` DROP COLUMN `x`` , DROP COLUMN ``total`', $db->ran );
+		$this->assertNotContains( 'ALTER TABLE `wp_acme_audit_entries` DROP COLUMN `x` , DROP COLUMN `total`', $db->ran );
+
+		$this->assertSame( "`n` varchar(20) NOT NULL DEFAULT 'it''s \\\\ here'", Reconciler::column_sql( [ 'name' => 'n', 'type' => 'varchar', 'length' => '20', 'default' => "it's \\ here" ] ) );
+	}
 }

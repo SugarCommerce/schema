@@ -10,7 +10,7 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Support;
 
 /**
  * Truth and text, as the first generator decided them.
@@ -57,5 +57,40 @@ final class Value {
 			is_scalar( $value ) => (string) $value,
 			default => Json::encode( $value ),
 		};
+	}
+
+	/**
+	 * A value as a single-quoted PHP string.
+	 *
+	 * The quote and the backslash are the two characters a single-quoted
+	 * string gives a meaning to, so a default of `it's` is written
+	 * `'it\'s'` and reads back as it was given, rather than ending the
+	 * string early.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string
+	 * @since 1.0.0
+	 */
+	public static function literal( mixed $value ): string {
+		return "'" . strtr(
+			self::text( $value ),
+			[
+				'\\' => '\\\\',
+				"'"  => "\\'",
+			]
+		) . "'";
+	}
+
+	/**
+	 * Text that is written inside a doc comment, unable to end it.
+	 *
+	 * @param string $text The text.
+	 *
+	 * @return string
+	 * @since 1.0.0
+	 */
+	public static function comment( string $text ): string {
+		return str_replace( '*/', '*\/', $text );
 	}
 }

@@ -220,4 +220,82 @@ final class GuardTest extends TestCase {
 
 		$this->assertFileExists( "{$dir}/src/Database/Tables/Orders.php" );
 	}
+
+	/**
+	 * A name that is not a plain identifier is refused before anything is
+	 * written: each one is written into PHP and SQL as it stands, so a quote
+	 * in one would end the string around it, and a folder of ".." would
+	 * write outside the plugin.
+	 *
+	 * @return void
+	 */
+	public function test_names_that_would_escape_the_code_stop_the_run(): void {
+		$column = [ 'name' => 'title', 'type' => 'varchar', 'length' => 20 ];
+		$bad    = [
+			'table'           => [ "orders'", [ 'singular' => 'order' ] ],
+			'singular'        => [ 'orders', [ 'singular' => 'order\'' ] ],
+			'alias'           => [ 'orders', [ 'singular' => 'order', 'alias' => "o'" ] ],
+			'functions_dir'   => [ 'orders', [ 'singular' => 'order', 'functions_dir' => '../../outside' ] ],
+			'column'          => [ 'orders', [ 'singular' => 'order', 'columns' => [ [ 'name' => "x', 'type' => 'int" ] + $column ] ] ],
+			'type'            => [ 'orders', [ 'singular' => 'order', 'columns' => [ [ 'type' => 'varchar(20); DROP' ] + $column ] ] ],
+			'length'          => [ 'orders', [ 'singular' => 'order', 'columns' => [ [ 'length' => "20'" ] + $column ] ] ],
+			'default_function' => [ 'orders', [ 'singular' => 'order', 'columns' => [ [ 'default_function' => 'f(); exit' ] + $column ] ] ],
+			'index'           => [ 'orders', [ 'singular' => 'order', 'indexes' => [ [ "title'" ] ] ] ],
+		];
+
+		foreach ( $bad as $what => [ $plural, $table ] ) {
+			$dir = $this->plugin( [ $plural => $table + [ 'columns' => [ $column ] ] ] );
+
+			try {
+				( new Generator( Config::load( $dir ) ) )->generate();
+				$this->fail( "A bad {$what} was accepted." );
+			} catch ( GeneratorException $e ) {
+				$this->assertStringContainsString( 'is not', $e->getMessage(), $what );
+			}
+
+			$this->assertSame( [ 'bin/schema.json', 'composer.json' ], self::files( $dir ), "Nothing is written for a bad {$what}." );
+		}
+	}
+
+	/**
+	 * A default with a quote or a backslash in it is written as a PHP
+	 * string that says exactly that, and a "why" cannot end the comment it
+	 * is written into.
+	 *
+	 * @return void
+	 */
+	public function test_free_text_stays_inside_its_string_and_comment(): void {
+		$dir = $this->plugin(
+			[
+				'notes' => [
+					'singular' => 'note',
+					'why'      => 'Ends here */ echo 1; /* or not.',
+					'columns'  => [
+						[ 'name' => 'title', 'type' => 'varchar', 'length' => 40, 'default' => "it's a \\ back" ],
+					],
+				],
+			]
+		);
+
+		( new Generator( Config::load( $dir ) ) )->generate();
+
+		foreach ( [ 'Schemas/Notes.php', 'Tables/Notes.php' ] as $file ) {
+			$code   = (string) file_get_contents( "{$dir}/src/Database/{$file}" );
+			$tokens = array_filter( token_get_all( $code ), 'is_array' );
+			$echoes = array_filter( $tokens, static fn( array $t ): bool => T_ECHO === $t[0] );
+
+			$this->assertSame( [], $echoes, "{$file}: the why stays a comment." );
+		}
+
+		$code    = (string) file_get_contents( "{$dir}/src/Database/Schemas/Notes.php" );
+		$strings = [];
+
+		foreach ( token_get_all( $code ) as $token ) {
+			if ( is_array( $token ) && T_CONSTANT_ENCAPSED_STRING === $token[0] ) {
+				$strings[] = $token[1];
+			}
+		}
+
+		$this->assertContains( var_export( "it's a \\ back", true ), $strings, 'The default reads back as written.' );
+	}
 }

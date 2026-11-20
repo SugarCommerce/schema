@@ -33,14 +33,14 @@ final class Config {
 	 *
 	 * @since 1.0.0
 	 */
-	public const INTEGERS = [ 'tinyint', 'smallint', 'mediumint', 'int', 'bigint' ];
+	public const array INTEGERS = [ 'tinyint', 'smallint', 'mediumint', 'int', 'bigint' ];
 
 	/**
 	 * The text column types: no default in CREATE TABLE, no length passed on.
 	 *
 	 * @since 1.0.0
 	 */
-	public const TEXTS = [ 'tinytext', 'text', 'mediumtext', 'longtext' ];
+	public const array TEXTS = [ 'tinytext', 'text', 'mediumtext', 'longtext' ];
 
 	/**
 	 * Column keys that say how a value is shaped, not how the table is built.
@@ -51,7 +51,7 @@ final class Config {
 	 *
 	 * @since 1.0.0
 	 */
-	public const NOT_DDL = [ 'kind', 'sanitize', 'default_function', 'transition' ];
+	public const array NOT_DDL = [ 'kind', 'sanitize', 'default_function', 'transition' ];
 
 	/**
 	 * Every setting, with its default.
@@ -59,7 +59,7 @@ final class Config {
 	 * @var array<string, mixed>
 	 * @since 1.0.0
 	 */
-	private const DEFAULTS = [
+	private const array DEFAULTS = [
 		'schema'            => 'bin/schema.json',
 		'lock'              => '',
 		'namespace'         => '',

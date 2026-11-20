@@ -9,8 +9,8 @@ declare( strict_types=1 );
 
 namespace SugarCommerce\Schema\Tests;
 
-use SugarCommerce\Schema\Json;
-use SugarCommerce\Schema\Versions;
+use SugarCommerce\Schema\Support\Json;
+use SugarCommerce\Schema\Render\Versions;
 
 /**
  * A version moves when, and only when, the table's shape does.

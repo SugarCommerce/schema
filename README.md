@@ -236,43 +236,32 @@ file, then `--config=file.json`, each over the one before.
 The generated files are already in the WordPress coding standards' format,
 so `phpcbf` leaves them alone.
 
-## Moving from arraypress/wp-*
+## Security
 
-From `arraypress/wp-schema` (`ArrayPress\Schema`). The schema file, the lock
-file and every setting are read as before; only these change:
+Everything in the schema file is written into PHP strings, SQL and file
+paths, so `generate` refuses, before writing anything:
 
-| Old | New |
-|---|---|
-| `composer require --dev arraypress/wp-schema` | `composer require --dev sugarcommerce/schema` |
-| `vendor/bin/wp-schema generate\|check\|reconcile` | `vendor/bin/schema generate\|check\|reconcile` |
-| `extra.wp-schema` in composer.json | `extra.schema` |
-| default `bases.query`: `ArrayPress\RegisterComponents\Query` | `SugarCommerce\Data\Query` |
-| default `command`: `vendor/bin/wp-schema generate` | `vendor/bin/schema generate` |
-| `ArrayPress\Schema\{Cli,Config,Generator,Reconciler,…}` | `SugarCommerce\Schema\{Cli,Config,Generator,Reconciler,…}` |
-| `ArrayPress\Schema\Py::truthy()`, `::str()` | `SugarCommerce\Schema\Value::truthy()`, `::text()` |
+* a table, singular, alias, column or index name that is not a lowercase
+  identifier, which could end the PHP string it is written into;
+* a type, length or scale that is not a plain word or number, and a
+  `default_function` or `sanitize` that is not a function name;
+* a `functions_dir` with `..` or anything outside letters, digits, `-`, `_`
+  and `/`, which would write outside the plugin.
 
-New: `reconcile` reports a declared table that is not there, and exits 1.
+A default with a quote or a backslash is written as a PHP string that reads
+back as given, and a `why` cannot close the doc comment it goes into.
+`reconcile` quotes every table and column name the way `%i` does, so a live
+column named with a backtick cannot add a clause to an `ALTER TABLE`.
 
-**What a plugin's generated files gain.** Run against a copy of a plugin's
-`bin/schema.json`, `bin/schema.lock.json`, `composer.json` (key renamed),
-`src/Database` and `functions`, the output differs from what wp-schema wrote
-only in the namespace swap:
+## Layout
 
-```bash
-cp -R bin/schema.json bin/schema.lock.json composer.json src/Database functions /tmp/check/…
-cd /tmp/check && sed -i '' 's/"wp-schema": {/"schema": {/' composer.json
-php /path/to/schema/bin/schema generate
-diff -r /path/to/plugin /tmp/check
-```
-
-For SugarCart (36 tables, 148 files), with its own `bases.query`
-(`SugarCart\Database\Query`) and `kern`, the only changed line is the
-docblock's `vendor/bin/wp-schema generate` → `vendor/bin/schema generate`,
-in the 36 Schema classes; set `"command": "vendor/bin/wp-schema generate"`
-and the output is byte for byte the same. With `bases.query` left to its
-default, the 25 query classes' `use ArrayPress\RegisterComponents\Query;`
-becomes `use SugarCommerce\Data\Query;` and nothing else moves. The plugin's
-hand-written `Database\Query` then extends `…\Vendor\SugarCommerce\Data\Query`.
+* `src/Cli.php`, `Config.php`, `Generator.php`: the command, its settings,
+  and the run that renders, guards and writes.
+* `src/Guard.php`: what stops a run from deleting hand-written code.
+* `src/Reconciler.php`: live tables against the Schema classes.
+* `src/Render/`: one class per kind of output (classes, columns, functions,
+  kinds, versions, the header) and the template reader.
+* `src/Support/`: the JSON writer and the value helpers.
 
 ## Requirements
 

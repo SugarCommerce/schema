@@ -10,7 +10,7 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Render;
 
 /**
  * Templates, from templates/*.php.tpl.
@@ -42,7 +42,7 @@ final class Template {
 	 */
 	public static function get( string $name ): string {
 		if ( ! isset( self::$cache[ $name ] ) ) {
-			$text = file_get_contents( dirname( __DIR__ ) . "/templates/{$name}.php.tpl" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- A file of this package, read by a command-line tool.
+			$text = file_get_contents( dirname( __DIR__, 2 ) . "/templates/{$name}.php.tpl" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- A file of this package, read by a command-line tool.
 
 			if ( false === $text ) {
 				throw new \LogicException( "There is no template {$name}." );

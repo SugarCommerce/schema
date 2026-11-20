@@ -10,7 +10,7 @@ declare( strict_types=1 );
 namespace SugarCommerce\Schema\Tests;
 
 use SugarCommerce\Schema\GeneratorException;
-use SugarCommerce\Schema\Kinds;
+use SugarCommerce\Schema\Render\Kinds;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -182,7 +182,7 @@ final class KindsTest extends TestCase {
 	 * @return void
 	 */
 	public function test_unsigned_false_is_written(): void {
-		$columns = new \SugarCommerce\Schema\Columns( self::config( $this->folder() ), $this->kinds() );
+		$columns = new \SugarCommerce\Schema\Render\Columns( self::config( $this->folder() ), $this->kinds() );
 
 		$this->assertSame(
 			"\t\tarray(\n\t\t\t'name'     => 'balance',\n\t\t\t'type'     => 'bigint',\n\t\t\t'length'   => '20',\n\t\t\t'unsigned' => false,\n\t\t\t'sortable' => true,\n\t\t\t'default'  => '0',\n\t\t\t'validate' => 'acme_amount',\n\t\t),",

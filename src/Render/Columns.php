@@ -10,7 +10,10 @@
 
 declare( strict_types=1 );
 
-namespace SugarCommerce\Schema;
+namespace SugarCommerce\Schema\Render;
+
+use SugarCommerce\Schema\Config;
+use SugarCommerce\Schema\Support\Value;
 
 /**
  * The columns and indexes every table has, and how each is written.
@@ -28,7 +31,7 @@ final class Columns {
 	 *
 	 * @since 1.0.0
 	 */
-	private const FLAGS = [ 'unsigned', 'primary', 'searchable', 'sortable', 'allow_null', 'uuid', 'date_query', 'compare', 'cache_key', 'created', 'modified' ];
+	private const array FLAGS = [ 'unsigned', 'primary', 'searchable', 'sortable', 'allow_null', 'uuid', 'date_query', 'compare', 'cache_key', 'created', 'modified' ];
 
 	/**
 	 * Constructor.
@@ -303,7 +306,7 @@ final class Columns {
 		}
 
 		if ( array_key_exists( 'default', $column ) && ! in_array( $column['type'], $texts, true ) ) {
-			$pairs['default'] = "'" . Value::text( $column['default'] ) . "'";
+			$pairs['default'] = Value::literal( $column['default'] );
 		}
 
 		[ $validate ] = $this->kinds->shaper( $column );
